@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+WORKBENCH_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+WORKBENCH_BIN="$WORKBENCH_ROOT/bin"
+
+echo ""
+echo "  workbench setup"
+echo ""
+
+# --- Detect shell config file ---
+SHELL_RC=""
+if [ -n "${ZSH_VERSION:-}" ] || [ "$(basename "$SHELL")" = "zsh" ]; then
+    SHELL_RC="$HOME/.zshrc"
+elif [ -n "${BASH_VERSION:-}" ] || [ "$(basename "$SHELL")" = "bash" ]; then
+    SHELL_RC="$HOME/.bashrc"
+fi
+
+if [ -z "$SHELL_RC" ]; then
+    echo "  ✗ Could not detect shell config file."
+    echo "    Add these lines manually to your shell config:"
+    echo ""
+    echo "      export PATH=\"$WORKBENCH_BIN:\$PATH\""
+    echo "      eval \"\$(workbench shell-init)\""
+    echo ""
+    exit 1
+fi
+
+# --- Add PATH if not already present ---
+if grep -q "$WORKBENCH_BIN" "$SHELL_RC" 2>/dev/null; then
+    echo "  ✓ PATH            already configured"
+else
+    echo "" >> "$SHELL_RC"
+    echo "# --- Workbench CLI ---" >> "$SHELL_RC"
+    echo "export PATH=\"$WORKBENCH_BIN:\$PATH\"" >> "$SHELL_RC"
+    echo "  ✓ PATH            added to $SHELL_RC"
+fi
+
+# --- Add shell integration if not already present ---
+if grep -q "workbench shell-init" "$SHELL_RC" 2>/dev/null; then
+    echo "  ✓ shell-init      already configured"
+else
+    echo "eval \"\$(workbench shell-init)\"" >> "$SHELL_RC"
+    echo "  ✓ shell-init      added to $SHELL_RC"
+fi
+
+# --- Bootstrap venv ---
+VENV_DIR="$WORKBENCH_ROOT/.venv"
+if [ -f "$VENV_DIR/bin/python3" ]; then
+    echo "  ✓ python venv     already exists"
+else
+    echo "  … python venv     creating..."
+    python3 -m venv "$VENV_DIR"
+    "$VENV_DIR/bin/pip" install --quiet typer rich pyyaml
+    echo "  ✓ python venv     ready"
+fi
+
+echo ""
+echo "  All set. Open a new terminal tab or run:"
+echo ""
+echo "    source $SHELL_RC"
+echo ""
+echo "  Then get started:"
+echo ""
+echo "    workbench init       # clone repos + auto-detect configs"
+echo "    workbench status     # see the dashboard"
+echo "    workbench up         # start services"
+echo ""

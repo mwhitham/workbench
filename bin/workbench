@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+WORKBENCH_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+VENV_DIR="$WORKBENCH_ROOT/.venv"
+
+# Bootstrap venv + deps on first run
+if [ ! -f "$VENV_DIR/bin/python3" ]; then
+    echo "  → Setting up workbench..."
+    python3 -m venv "$VENV_DIR"
+    "$VENV_DIR/bin/pip" install --quiet typer rich pyyaml
+    echo "  ✓ Ready"
+    echo ""
+fi
+
+export PYTHONPATH="$WORKBENCH_ROOT:${PYTHONPATH:-}"
+
+# Shell integration setup
+if [ "${1:-}" = "shell-init" ]; then
+    cat <<'SHELL_FUNC'
+workbench() {
+    if [ "$1" = "cd" ]; then
+        shift
+        local target
+        target="$(command workbench cd "$@" 2>&1)"
+        if [ $? -eq 0 ] && [ -d "$target" ]; then
+            builtin cd "$target"
+        else
+            echo "$target" >&2
+        fi
+    else
+        command workbench "$@"
+    fi
+}
+SHELL_FUNC
+    exit 0
+fi
+
+exec "$VENV_DIR/bin/python3" -c "from cli.main import run; run()" "$@"

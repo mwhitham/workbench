@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "workbench"
+version = "0.1.0"
+description = "CLI framework for orchestrating multi-repo projects with AI-ready documentation scaffolding"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [{name = "Michael Whitham"}]
+dependencies = [
+    "typer[all]>=0.9.0",
+    "rich>=13.0.0",
+    "PyYAML>=6.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/mwhitham/workbench"
+Repository = "https://github.com/mwhitham/workbench"
+
+[project.scripts]
+workbench = "cli.main:run"
+
+[tool.setuptools.packages.find]
+include = ["cli*"]
+
+[tool.setuptools.package-data]
+"cli.scaffold" = ["**/*"]

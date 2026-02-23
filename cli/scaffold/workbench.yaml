@@ -1,0 +1,17 @@
+# workbench.yaml — central configuration for your multi-repo project.
+#
+# Each repo entry defines a git repository that the workbench manages.
+# Run `workbench discover` to auto-detect language, framework, ports, etc.
+# Run `workbench add <url>` to add new repos interactively.
+
+workbench:
+  name: {project_name}
+  version: 0.1.0
+
+repos: {}
+
+services:
+  shared: []
+
+environment:
+  shared_env: {}
