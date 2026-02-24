@@ -121,7 +121,9 @@ eval "$(workbench shell-init)"
 
 ## Configuration
 
-All repo configuration lives in `workbench.yaml`:
+All project configuration lives in `workbench.yaml` at the root of your workbench.
+
+### Example
 
 ```yaml
 workbench:
@@ -137,6 +139,10 @@ repos:
     port: 3000
     language: TypeScript
     framework: Express
+    health_check: /health
+    install_command: npm install
+    dependencies: package.json
+    env_file: .env.example
   frontend:
     url: git@github.com:my-org/frontend.git
     path: repos/frontend
@@ -145,11 +151,63 @@ repos:
     port: 5173
     language: TypeScript
     framework: React
+    install_command: npm install
+    dependencies: package.json
+  infra:
+    url: git@github.com:my-org/infra.git
+    path: repos/infra
+    description: Terraform infrastructure
+    type: infrastructure
+    language: HCL
+    framework: Terraform
+
+services:
+  shared: []
+
+environment:
+  shared_env: {}
 ```
 
-Run `workbench discover` to auto-detect fields like language, framework, start command, port, and dependency files.
+### Top-level sections
 
-Repos with `type: infrastructure` are reference-only and never started by `workbench up`.
+| Section | Purpose |
+|---|---|
+| `workbench` | Project name and config version |
+| `repos` | Map of repo name to repo configuration (see below) |
+| `services.shared` | Shared services like databases or caches |
+| `environment.shared_env` | Environment variables shared across all repos |
+
+### Repo fields
+
+Fields are either **set when you add a repo** or **auto-detected by `workbench discover`**.
+
+**Set by `workbench add`** (user-provided):
+
+| Field | Description |
+|---|---|
+| `url` | Git clone URL |
+| `path` | Relative path from workbench root (derived from clone URL, e.g. `repos/api`) |
+| `description` | Short human-readable description |
+| `type` | `"service"` (default) or `"infrastructure"` -- infrastructure repos are reference-only and never started by `workbench up` |
+
+**Auto-detected by `workbench discover`** (can be manually overridden):
+
+| Field | Description | How it's detected |
+|---|---|---|
+| `language` | e.g. TypeScript, Python, Go, Rust, HCL | Marker files like `tsconfig.json`, `requirements.txt`, `go.mod`, `Cargo.toml`, `*.tf` |
+| `framework` | e.g. Next.js, FastAPI, React, Django, Expo | Dependency files (`package.json` deps, Python requirements) |
+| `start_command` | Command to start the service | `package.json` scripts, Makefile targets, Procfile, `render.yaml` |
+| `port` | Port the service listens on | `.env.example` PORT variable, or framework defaults |
+| `health_check` | Health endpoint path (e.g. `/health`) | Route decorators in source code |
+| `install_command` | Command to install dependencies (e.g. `npm install`) | Lock files and dependency manifests |
+| `dependencies` | Primary dependency file (e.g. `package.json`) | File presence |
+| `env_file` | Env template file (e.g. `.env.example`) | File presence |
+
+### Auto-discovery
+
+`workbench discover` scans each cloned repo and populates the auto-detected fields listed above. Discovery also runs automatically when you `workbench add` a new repo.
+
+Manual values in `workbench.yaml` are never overwritten by discovery -- if you set a field by hand, it stays as-is. Discovery only fills in fields that are currently empty.
 
 ## For AI Agents
 

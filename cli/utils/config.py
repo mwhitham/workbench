@@ -8,7 +8,7 @@ Other CLI commands import from this module to read/write config.
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
